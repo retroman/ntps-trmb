@@ -1,0 +1,14 @@
+# Copyright the NTPsec project contributors
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+FROM gentoo/portage as portage
+
+FROM gentoo/stage3
+
+COPY --from=portage /var/db/repos/gentoo /var/db/repos/gentoo
+
+RUN emerge -q y \
+	net-misc/pps-tools \
+	sys-devel/bison \
+	sys-libs/libcap

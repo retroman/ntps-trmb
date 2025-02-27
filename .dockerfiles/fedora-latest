@@ -1,0 +1,14 @@
+# Copyright the NTPsec project contributors
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+FROM fedora:latest
+
+RUN dnf -y install \
+	bison \
+	gcc \
+	libbsd-devel \
+	libcap-devel \
+	openssl-devel \
+	pps-tools-devel \
+	python3-devel

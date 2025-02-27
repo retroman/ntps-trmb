@@ -1,0 +1,15 @@
+# Copyright the NTPsec project contributors
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+FROM opensuse/leap
+
+RUN zypper -n install \
+	bison \
+	gcc \
+	libbsd-devel \
+	libcap-devel \
+	libopenssl-devel \
+	pps-tools-devel \
+	python3-curses \
+	python3-devel

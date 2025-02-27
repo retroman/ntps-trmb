@@ -1,0 +1,15 @@
+# Copyright the NTPsec project contributors
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+FROM python:3-slim
+
+RUN apt-get update -qq
+RUN apt-get install -y -qq \
+	bison \
+	gcc \
+	libbsd-dev \
+	libcap-dev \
+	libssl-dev \
+	netbase \
+	pps-tools

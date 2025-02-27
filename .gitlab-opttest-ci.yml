@@ -1,0 +1,143 @@
+make-tarball:
+  image: $CI_REGISTRY/ntpsec/ntpsec/debian-stable
+  stage: test
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND="noninteractive" apt-get install -y git asciidoctor
+    - ln -svf /usr/bin/python{3,}
+    - ./waf configure build --enable-doc --enable-man
+    - cd devel&&/bin/sh make-tarball
+  tags:
+    - gitlab-org
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+.option_tester_py3_only: &option_tester_py3_only
+  stage: test
+  needs: []
+  script:
+    - PYTHON=python3 bash tests/option-tester.sh
+  tags:
+    - gitlab-org
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+alpine-edge-options-tester:
+  allow_failure: true
+  <<: *option_tester_py3_only
+  image: alpine:edge
+  before_script:
+    - apk update && apk add gcc bison musl-dev openssl-dev libcap-dev python3-dev asciidoc libseccomp-dev bash
+
+alpine-options-tester:
+  <<: *option_tester_py3_only
+  image: alpine
+  before_script:
+    - apk update && apk add gcc bison musl-dev openssl-dev libcap-dev python3-dev asciidoc libseccomp-dev bash
+
+centos-options-tester:
+  <<: *option_tester_py3_only
+  image: quay.io/centos/centos:stream9
+  before_script:
+    - dnf -y --enablerepo=crb install bison gcc openssl-devel libcap-devel python3-devel pps-tools-devel libseccomp-devel pkgconf-pkg-config bash
+
+fedora-latest-options-tester:
+  image: fedora:latest
+  before_script:
+    - yum -y install bison gcc openssl-devel libcap-devel pps-tools-devel python3-devel libseccomp-devel pkgconf-pkg-config
+  <<: *option_tester_py3_only
+
+opensuse-leap-options-tester:
+  <<: *option_tester_py3_only
+  image: opensuse/leap
+  before_script:
+    - zypper -n install bison gcc libopenssl-devel libcap-devel pps-tools-devel libseccomp-devel python3-devel python3-curses pkg-config bash
+
+gentoo-options-tester:
+  <<: *option_tester_py3_only
+  image: gentoo/stage3
+  before_script:
+    - emerge-webrsync
+    - emerge -q y sys-libs/libcap sys-devel/bison net-misc/pps-tools app-text/asciidoc sys-libs/libseccomp app-shells/bash
+
+macos-options-tester:
+  stage: test
+  needs: []
+  script:
+    - PKG_CONFIG_PATH=${HOMEBREW_PREFIX}/opt/openssl/lib/pkgconfig PYTHON=${HOMEBREW_PREFIX}/bin/python3 tests/option-tester.sh
+  tags:
+    - saas-macos-medium-m1
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH && $CI_PROJECT_PATH == "NTPsec/ntpsec"'
+
+freebsd-options-tester:
+  stage: test
+  needs: []
+  script:
+    - PYTHON=python2.7 tests/option-tester.sh
+    - PYTHON=python3 tests/option-tester.sh
+  tags:
+    - freebsd
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH && $CI_PROJECT_PATH == "NTPsec/ntpsec"'
+      when: never
+    - when: never
+
+.deb_option_tester_py3_only: &deb_option_tester_py3_only
+  stage: test
+  needs: []
+  script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y netbase bison gcc libssl-dev libcap-dev pps-tools libseccomp-dev bash pkg-config python3-dev python3-minimal
+    - PYTHON=python3 bash tests/option-tester.sh
+  tags:
+    - gitlab-org
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+.deb_old_option_tester: &deb_old_option_tester
+  stage: test
+  needs: []
+  script:
+    - apt-get update
+    - apt-get install -y netbase bison gcc libssl-dev libcap-dev pps-tools python2-dev python2-minimal libseccomp-dev bash pkg-config python3-dev python3-minimal
+    - PYTHON=python2 bash tests/option-tester.sh
+    - PYTHON=python3 bash tests/option-tester.sh
+  tags:
+    - gitlab-org
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+debian-i386-options-tester:
+  image: i386/debian:stable-slim
+  <<: *deb_option_tester_py3_only
+
+debian-oldstable-options-tester:
+  image: debian:oldstable-slim
+  <<: *deb_old_option_tester
+
+debian-stable-options-tester:
+  image: debian:stable-slim
+  <<: *deb_option_tester_py3_only
+
+debian-testing-options-tester:
+  image: debian:testing-slim
+  <<: *deb_option_tester_py3_only
+
+debian-unstable-options-tester:
+  allow_failure: true
+  image: debian:unstable-slim
+  <<: *deb_option_tester_py3_only
+
+ubuntu-latest-options-tester:
+  image: ubuntu:latest
+  <<: *deb_option_tester_py3_only
+
+ubuntu-devel-options-tester:
+  allow_failure: true
+  image: ubuntu:devel
+  <<: *deb_option_tester_py3_only
+
+ubuntu-rolling-options-tester:
+  image: ubuntu:rolling
+  <<: *deb_option_tester_py3_only
